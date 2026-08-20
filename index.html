@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New York City Postcard</title>
+<style>
+  :root {
+    --shadow: rgba(0,0,0,0.35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 16px 80px;
+    background: #2a2a2a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #eee6d3;
+  }
+  
+  .stage {
+    perspective: 2000px;
+    width: 100%;
+    max-width: 750px;
+    margin-top: 40px;
+  }
+  
+  .postcard {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.41 / 1; 
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(.4,.2,.2,1);
+    cursor: pointer;
+  }
+  
+  .postcard.flipped { 
+    transform: rotateY(180deg); 
+  }
+  
+  .face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 10px 30px var(--shadow);
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  
+  /* --- FRONT OF POSTCARD --- */
+  .face.front {
+    background: #000;
+    transform: rotateY(0deg);
+  }
+  .face.front img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* --- BACK OF POSTCARD --- */
+  .face.back {
+    transform: rotateY(180deg);
+    background: url('1787039099219.jpg') no-repeat center center;
+    background-size: cover;
+  }
+
+  /* Interactive Message Area (Left Side) */
+  .message-area {
+    position: absolute;
+    top: 18%;
+    left: 4%;
+    width: 44%;
+    height: 72%;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Comic Sans MS', 'Caveat', cursive, sans-serif;
+    font-size: 13.5px;
+    color: #111;
+    line-height: 1.5;
+    padding: 5px;
+  }
+  
+  .message-area::placeholder {
+    color: #888;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  /* Barcode Overlay (Top Right) */
+  .barcode-link {
+    position: absolute;
+    top: 2%;
+    right: 2%;
+    width: 22%;
+    height: 18%;
+    display: block;
+    border: 2px dashed transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  .barcode-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .barcode-link:hover {
+    border-color: rgba(0, 102, 204, 0.6);
+    background: rgba(0, 102, 204, 0.08);
+  }
+
+  /* Address Lines Overlay (Right Side) */
+  .address-container {
+    position: absolute;
+    top: 48.5%;
+    right: 4.5%;
+    width: 37.5%;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .address-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'Comic Sans MS', 'Caveat', cursive, sans-serif;
+    font-size: 14px;
+    color: #111;
+    padding: 0 4px;
+    width: 100%;
+    height: 22px;
+  }
+
+  .instructions {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #999;
+    font-family: monospace;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="postcard" id="postcard" onclick="toggleFlip(event)">
+    
+    <!-- Front of Postcard -->
+    <div class="face front">
+      <img src="1787038214308.jpg" alt="New York City Postcard Front">
+    </div>
+    
+    <!-- Back of Postcard -->
+    <div class="face back">
+      
+      <!-- Interactive Message Box (Left side) -->
+      <textarea class="message-area" placeholder="Write your message here...">Mahattan, New York
+
+        Địa điểm dừng chân đầu tiên của chuyến đi là Mahattan, New York. Một trong những thành phố nhộn nhịp và nổi tiếng của
+    Nước Mỹ. 
+
+      </textarea>
+
+      <!-- Clickable Barcode Image Link (Top Right) -->
+      <a class="barcode-link" href="https://anguyen1601.github.io/Yale/album.html" target="_blank" title="Click to view album/video">
+        <img src="https://www.shutterstock.com/image-vector/modern-new-york-city-skyline-260nw-2605381909.jpg" alt="New York Skyline">
+      </a>
+      
+      <!-- Interactive Address Lines Overlay (Right side) -->
+      <div class="address-container">
+        <input type="text" class="address-input" placeholder="To My Special Person">
+        <input type="text" class="address-input" placeholder="New York, NY">
+        <input type="text" class="address-input" placeholder="United States">
+        <input type="text" class="address-input" placeholder="">
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="instructions">
+  Click the edges of the postcard to flip.<br>
+  (Clicking the text fields or barcode will not flip the card so you can interact with them!)
+</div>
+
+<script>
+  function toggleFlip(e) {
+    if (
+      e.target.tagName === 'TEXTAREA' || 
+      e.target.tagName === 'INPUT' || 
+      e.target.tagName === 'A' || 
+      e.target.closest('a')
+    ) {
+      return;
+    }
+    document.getElementById('postcard').classList.toggle('flipped');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const messageArea = document.querySelector('.message-area');
+    const addressInputs = document.querySelectorAll('.address-input');
+
+    // Restore saved text (including blank content)
+    const savedMessage = localStorage.getItem('nyc_postcard_message');
+    if (savedMessage !== null) {
+      messageArea.value = savedMessage;
+    }
+    
+    addressInputs.forEach((input, index) => {
+      const savedValue = localStorage.getItem(`nyc_postcard_input_${index}`);
+      if (savedValue !== null) {
+        input.value = savedValue;
+      }
+    });
+
+    // Save changes automatically
+    messageArea.addEventListener('input', () => {
+      localStorage.setItem('nyc_postcard_message', messageArea.value);
+    });
+
+    addressInputs.forEach((input, index) => {
+      input.addEventListener('input', () => {
+        localStorage.setItem(`nyc_postcard_input_${index}`, input.value);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Photo Album - New York Trip</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Playfair+Display:ital,wght@0,400;1,600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,600&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #f0eadd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; 
+    overflow: hidden; 
+    font-family: 'Playfair Display', serif;
+  }
+
+  .album-music {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .album-scene {
+    perspective: 1500px;
+    width: 900px;
+    height: 600px;
+    position: relative;
+    display: flex;
+  }
+
+  .page-right {
+    position: absolute;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: #fdfbf7;
+    box-shadow: inset 5px 0 15px rgba(0,0,0,0.1), 10px 10px 20px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    padding: 15px 25px;
+    border-radius: 0 8px 8px 0;
+    z-index: 1;
+    border-left: 2px solid #e3dec9; 
+  }
+
+  .leaf {
+    position: absolute;
+    right: 0; 
+    width: 50%;
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    cursor: pointer;
+  }
+
+  /* Cập nhật z-index cho 6 trang lật */
+  #leaf1 { z-index: 11; }
+  #leaf2 { z-index: 10; }
+  #leaf3 { z-index: 9; }
+  #leaf4 { z-index: 8; }
+  #leaf5 { z-index: 7; }
+  #leaf6 { z-index: 6; }
+
+  .leaf.flipped {
+    transform: rotateY(-180deg);
+  }
+
+  .face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .face.front {
+    background-color: #fdfbf7;
+    display: flex;
+    flex-direction: column;
+    padding: 15px 25px;
+    box-shadow: inset 5px 0 15px rgba(0,0,0,0.1);
+    border-left: 2px solid #e3dec9; 
+  }
+
+  .face.front.cover {
+    background-color: #F8C39F; 
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: inset 5px 0 15px rgba(0,0,0,0.3), 5px 5px 15px rgba(0,0,0,0.4);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02)), 
+                      repeating-linear-gradient(-45deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02));
+    background-size: 4px 4px;
+    border-left: none;
+  }
+
+  .spiral-binding {
+    position: absolute;
+    left: -15px;
+    top: 2%;
+    height: 96%;
+    width: 30px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 15px,
+      #b8860b 15px,
+      #8b6508 20px,
+      transparent 20px,
+      transparent 30px
+    );
+    z-index: 10;
+  }
+
+  .corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 3px solid #d4af37;
+  }
+  .corner-top-right { top: 10px; right: 10px; border-bottom: none; border-left: none; }
+  .corner-bottom-right { bottom: 10px; right: 10px; border-top: none; border-left: none; }
+
+  .cover-photo-slot {
+    width: 75%;
+    aspect-ratio: 4/3;
+    background: #000;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+  .cover-photo-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+  }
+  
+  /* Giảm size chữ */
+  .cover-title {
+    color: #ffffff; 
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    font-size: 18px; /* Giảm từ 22px xuống 18px cho vừa vặn */
+    letter-spacing: 4px; /* Thu hẹp khoảng cách chữ lại một chút */
+    text-transform: uppercase;
+    text-align: center;
+    width: 100%;
+    line-height: 1.5; /* Khoảng cách giữa 2 dòng */
+  }
+
+  .cover-date-input {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-top: 15px;
+    outline: none;
+    width: 80%;
+  }
+
+  .face.back {
+    background-color: #fdfbf7;
+    transform: rotateY(180deg);
+    box-shadow: inset -5px 0 15px rgba(0,0,0,0.1);
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    flex-direction: column;
+    padding: 15px 25px;
+    border-left: none;
+  }
+
+  .travel-tag {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-family: 'Caveat', cursive;
+    font-size: 22px; /* Thu nhỏ từ 28px */
+    color: #C4673B; 
+    font-weight: bold;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .face.back .travel-tag {
+    left: 25px; 
+    right: auto;
+  }
+  
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    margin-top: 25px;
+  }
+
+  .top-section, .bottom-section {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .photo-frame {
+    background: #fff;
+    padding: 8px 8px 22px 8px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
+    width: 48%;
+    transform: rotate(-2deg);
+    transition: transform 0.3s;
+  }
+  .photo-frame:nth-child(even) {
+    transform: rotate(2deg);
+  }
+  .photo-frame:hover {
+    transform: rotate(0deg) scale(1.05);
+    z-index: 10;
+  }
+  
+  .photo-frame img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    background: #e0e0e0;
+    cursor: pointer;
+  }
+
+  .text-block {
+    width: 48%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5px;
+  }
+
+  /* Giảm size chữ */
+  .page-title {
+    font-family: 'Caveat', cursive;
+    font-size: 20px; 
+    color: #333;
+    border: none;
+    background: transparent;
+    outline: none;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+  /* Giảm size chữ */
+  .scrapbook-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 15px; 
+    color: #555;
+    background: transparent;
+    border: none;
+    resize: none;
+    width: 100%;
+    height: 120px;
+    outline: none;
+    line-height: 1.3; 
+    text-align: center;
+    overflow: hidden; 
+  }
+
+  .photo-frame, .text-block, .cover-date-input, .cover-title {
+    cursor: default; 
+  }
+  .photo-frame img, .cover-photo-slot img {
+    cursor: pointer; 
+  }
+
+  .modal {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .modal.active {
+    visibility: visible;
+    opacity: 1;
+  }
+  .modal-content {
+    max-width: 85%;
+    max-height: 85%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 8px solid #fff;
+    border-radius: 4px;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+    object-fit: contain;
+  }
+  .modal.active .modal-content {
+    transform: scale(1);
+  }
+  .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    color: #fff;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .close-btn:hover {
+    color: #d4af37;
+  }
+</style>
+</head>
+<body>
+
+<audio class="album-music" controls autoplay loop>
+  <source src="piano music can be so simple, yet so beautiful.mp3" type="audio/mpeg">
+</audio>
+
+<div class="album-scene" id="album">
+  
+  <!-- Trang Cố Định Phía Sau Cùng (Fixed Back Page) -->
+  <div class="page-right">
+    <div class="travel-tag">The End</div>
+    <div class="layout-grid" style="grid-template-rows: auto 1fr;">
+      <div class="top-section" style="justify-content: center; margin-top: 10px;">
+        <div class="photo-frame" style="width: 60%; transform: rotate(0deg); padding: 8px 8px 25px 8px;">
+          <!-- Ảnh kết thúc album -->
+          <img src="20260723_203909.jpg" alt="Ending Photo" style="aspect-ratio: 3/4;">
+        </div>
+      </div>
+      <div class="bottom-section" style="justify-content: center; align-items: flex-start; margin-top: 15px;">
+        <div class="text-block" style="width: 85%;">
+          <input type="text" class="page-title" value="Hết Rồi" readonly>
+          <textarea class="scrapbook-text" readonly>Chuyến đi bùng nổ khép lại tại đây. Kỷ niệm tuyệt đẹp mang theo mãi mãi. Hẹn chuyến sau nhé!</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ <!-- Trang Cố Định Phía Sau Cùng (Fixed Back Page) -->
+  <div class="page-right">
+    <div class="travel-tag">The End</div>
+    <div class="layout-grid">
+      
+      <!-- Ảnh 1: Tháp Empire State rực sáng -->
+      <div class="top-section">
+        <div class="photo-frame">
+          <img src="20260723_211107.jpg" alt="Empire State Night">
+        </div>
+        <div class="text-block">
+          <input type="text" class="page-title" value="Rực Sáng" readonly>
+          <textarea class="scrapbook-text" readonly>Tháp Empire State rực sáng giữa màn đêm. Một New York thực sự không bao giờ ngủ.</textarea>
+        </div>
+      </div>
+
+      <!-- Ảnh 2: Ảnh kết thúc album -->
+      <div class="bottom-section">
+        <div class="text-block">
+          <input type="text" class="page-title" value="Hết Rồi" readonly>
+          <textarea class="scrapbook-text" readonly>Chuyến đi bùng nổ khép lại tại đây. Kỷ niệm tuyệt đẹp mang theo mãi mãi. Hẹn chuyến sau nhé!</textarea>
+        </div>
+        <div class="photo-frame">
+          <img src="20260723_203909.jpg" alt="Ending Photo">
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- Leaf 5: Đường phố & Nhịp Sống -->
+  <div class="leaf" id="leaf5">
+    <div class="face front" onclick="flipLeaf('leaf5', true, event)">
+      <div class="travel-tag">Vibe Phố</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="20260723_201317.jpg" alt="Radio City Street"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Lên Đèn" readonly>
+            <textarea class="scrapbook-text" readonly>Phố xá nhộn nhịp, xa xa là Radio City rực rỡ sắc màu!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Quẩy Lên" readonly>
+            <textarea class="scrapbook-text" readonly>Times Square quẩy tung chảo! Biển người chật kín siêu đông vui!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_202028.jpg" alt="Times Square"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaf 5 Back: Nhịp sống & Nghệ thuật -->
+    <div class="face back" onclick="flipLeaf('leaf5', false, event)">
+      <div class="travel-tag">Nhịp Sống</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <!-- Ảnh Grand Central -->
+          <div class="photo-frame"><img src="20260723_205053.jpg" alt="Grand Central"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Sầm Uất" readonly>
+            <textarea class="scrapbook-text" readonly>Bên trong Grand Central vô cùng lộng lẫy, người qua lại tấp nập không ngừng.</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Điện Ảnh" readonly>
+            <textarea class="scrapbook-text" readonly>Thành phố lên đèn dưới góc máy điện ảnh. Nét đẹp hoài cổ đan xen hiện đại.</textarea>
+          </div>
+          <div class="photo-frame"><img src="Mahattan_movie.jpg" alt="Manhattan View"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaf 4: Nhà Thờ St. Patrick & Rockefeller -->
+  <div class="leaf" id="leaf4">
+    <div class="face front" onclick="flipLeaf('leaf4', true, event)">
+      <div class="travel-tag">Kiến Trúc</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="20260723_200039.jpg" alt="St Patrick Outside"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Vĩ Đại" readonly>
+            <textarea class="scrapbook-text" readonly>Nhà thờ St. Patrick nguy nga! Kiến trúc Gothic đỉnh cao là đây!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Choáng Ngợp" readonly>
+            <textarea class="scrapbook-text" readonly>Bên trong đẹp thiêng liêng và tĩnh lặng đến nín thở!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_194304.jpg" alt="St Patrick Inside"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaf 4 Back: Rockefeller Center -->
+    <div class="face back" onclick="flipLeaf('leaf4', false, event)">
+      <div class="travel-tag">Sang Chảnh</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="20260723_195713.jpg" alt="Atlas Statue"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Ngầu Đét" readonly>
+            <textarea class="scrapbook-text" readonly>Tượng Atlas gánh cả bầu trời ngay tòa nhà Rockefeller!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Hoa Lệ" readonly>
+            <textarea class="scrapbook-text" readonly>Trung tâm Rockefeller sầm uất, mang đậm phong cách tài phiệt!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_200615.jpg" alt="Rockefeller Plaza"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaf 3: Brooklyn Bridge & Moynihan -->
+  <div class="leaf" id="leaf3">
+    <div class="face front" onclick="flipLeaf('leaf3', true, event)">
+      <div class="travel-tag">Biểu Tượng</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="20260723_185708.jpg" alt="Brooklyn Bridge"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Huyền Thoại" readonly>
+            <textarea class="scrapbook-text" readonly>Check-in cầu Brooklyn đón gió mát rượi, lên hình xuất sắc!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Hối Hả" readonly>
+            <textarea class="scrapbook-text" readonly>Dạo bước Midtown chuẩn nhịp sống của thành phố không ngủ!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_143651.jpg" alt="The New School"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaf 3 Back: Moynihan & Church -->
+    <div class="face back" onclick="flipLeaf('leaf3', false, event)">
+      <div class="travel-tag">Giao Thoa</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <!-- Ảnh Moynihan Train Hall -->
+          <div class="photo-frame"><img src="Moynihan_train_hall.jpg" alt="Moynihan Train Hall"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Sân Ga" readonly>
+            <textarea class="scrapbook-text" readonly>Moynihan Train Hall đẹp lộng lẫy, góc nào chụp cũng như tạp chí!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Nét Cổ Kính" readonly>
+            <textarea class="scrapbook-text" readonly>Nhà thờ nhỏ nép mình giữa rừng cao ốc, một nét chấm phá nghệ thuật!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_151847.jpg" alt="Historic Church"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaf 2: Trung tâm tài chính Downtown & Công viên -->
+  <div class="leaf" id="leaf2">
+    <div class="face front" onclick="flipLeaf('leaf2', true, event)">
+      <div class="travel-tag">Phố Wall</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="US_stock_exchange.jpg" alt="US Stock Exchange"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Sàn Chứng Khoán NYSE" readonly>
+            <textarea class="scrapbook-text" readonly>Phố Wall vẫy gọi! Hít vội miếng không khí tỷ phú cho mau giàu!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Cool Ngầu" readonly>
+            <textarea class="scrapbook-text" readonly>Tòa án liên bang oai phong hệt như bối cảnh phim hành động Mỹ!</textarea>
+          </div>
+          <div class="photo-frame"><img src="US_court_house.jpg" alt="US Court House"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaf 2 Back: City Hall & Park -->
+    <div class="face back" onclick="flipLeaf('leaf2', false, event)">
+      <div class="travel-tag">Thư Giãn</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="20260723_182916.jpg" alt="City Hall"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Tòa Thị Chính" readonly>
+            <textarea class="scrapbook-text" readonly>Uy nghi và cổ kính ngay giữa lòng phố thị sầm uất.</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Cực Chill" readonly>
+            <textarea class="scrapbook-text" readonly>Góc công viên xanh mát, đài phun nước lên hình đẹp mê ly!</textarea>
+          </div>
+          <div class="photo-frame"><img src="20260723_182419.jpg" alt="Park Fountain"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ <!-- Leaf 1 (Cover & Khởi đầu Downtown) -->
+  <div class="leaf" id="leaf1">
+    <div class="face front cover" onclick="flipLeaf('leaf1', true, event)">
+      <div class="spiral-binding"></div>
+      <div class="corner corner-top-right"></div>
+      <div class="corner corner-bottom-right"></div>
+      <div class="cover-photo-slot">
+        <img src="Mahattan_overview.jpg" alt="Manhattan Overview">
+      </div>
+      <h1 class="cover-title">Cùng nhau khám phá<br>Manhattan</h1>
+      <input type="text" class="cover-date-input" value="New York 2026" readonly>
+    </div>
+
+    <!-- Leaf 1 Back: World Trade Center & Oculus -->
+    <div class="face back" onclick="flipLeaf('leaf1', false, event)">
+      <div class="travel-tag">Downtown</div>
+      <div class="layout-grid">
+        <div class="top-section">
+          <div class="photo-frame"><img src="World_trade_center.jpg" alt="World Trade Center"></div>
+          <div class="text-block">
+            <input type="text" class="page-title" value="Let's Gooo" readonly>
+            <textarea class="scrapbook-text" readonly>Chạm ngõ Lower Manhattan! Quả view Word Trade Center siêu hoành tráng!</textarea>
+          </div>
+        </div>
+        <div class="bottom-section">
+          <div class="text-block">
+            <input type="text" class="page-title" value="Ánh Sáng" readonly>
+            <textarea class="scrapbook-text" readonly>Lạc vào phi thuyền Oculus, không gian ngập tràn ánh sáng sống ảo!</textarea>
+          </div>
+          <div class="photo-frame"><img src="Trade_center_inside.jpg" alt="Trade Center Inside"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="imageModal" class="modal" onclick="closeModal()">
+  <span class="close-btn">&times;</span>
+  <img class="modal-content" id="modalImg">
+</div>
+
+<script>
+  let currentZ = 20; 
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const music = document.querySelector('.album-music');
+    if (music) {
+      music.volume = 0.4; 
+      music.play().catch(() => {
+        const startOnInteraction = () => {
+          music.play();
+          document.removeEventListener('click', startOnInteraction);
+          document.removeEventListener('keydown', startOnInteraction);
+        };
+        document.addEventListener('click', startOnInteraction);
+        document.addEventListener('keydown', startOnInteraction);
+      });
+    }
+  });
+
+  function flipLeaf(leafId, forward, event) {
+    if(event) {
+      if (
+        event.target.closest('.photo-frame') ||
+        event.target.closest('.text-block') ||
+        event.target.closest('.cover-photo-slot') ||
+        ['input', 'textarea', 'img'].includes(event.target.tagName.toLowerCase())
+      ) {
+        return; 
+      }
+      event.stopPropagation(); 
+    }
+
+    const music = document.querySelector('.album-music');
+    if (music && music.paused) {
+      music.volume = 0.4;
+      music.play().catch(error => console.log("Playback error:", error));
+    }
+
+    const leaf = document.getElementById(leafId);
+    
+    currentZ++;
+    leaf.style.zIndex = currentZ;
+
+    if(forward) {
+      leaf.classList.add('flipped');
+    } else {
+      leaf.classList.remove('flipped');
+    }
+  }
+
+  document.querySelectorAll('.photo-frame img, .cover-photo-slot img').forEach(img => {
+    img.addEventListener('click', function(e) {
+      e.stopPropagation(); 
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      modalImg.src = this.src;
+      modal.classList.add('active');
+    });
+  });
+
+  function closeModal() {
+    document.getElementById('imageModal').classList.remove('active');
+  }
+</script>
+
+</body>
+</html>
